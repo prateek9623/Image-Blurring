@@ -12,7 +12,6 @@
 const int RADIUS = 1;
 const char* inputImageName = "input.jpg";
 const char* outputImageName = "output.jpg";
-
 using namespace cv;
 using namespace std;
 
@@ -23,10 +22,12 @@ void showImage(Mat img, char *title) {
 	waitKey(0);
 }
 
-__device__ void memSetSharedMem(int x, int y, uchar3 *sharedData, uchar3 *globalData, int maxX, int maxY) {
+__device__ void memSetSharedMem(int x, int y, uchar3 *sharedData,const uchar3 *globalData,int maxX,int maxY) {
+	int posX;
+	int posY;
 	if (threadIdx.x == 0 && threadIdx.y == 0) {
-		for (int posY = 0; posY <= RADIUS; posY++)
-			for (int posX = 0; posX <= RADIUS; posX++) {
+		for ( posY = 0; posY <= RADIUS; posY++)
+			for ( posX = 0; posX <= RADIUS; posX++) {
 				if (x <= 0 && y <= 0) {
 					sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x+posX + maxX * (y+posY)];
 				}
@@ -36,8 +37,8 @@ __device__ void memSetSharedMem(int x, int y, uchar3 *sharedData, uchar3 *global
 			}
 	}
 	else if (threadIdx.y == 0 && threadIdx.x == blockDim.x - 1) {
-		for (int posY = 0; posY <= RADIUS; posY++)
-			for (int posX = 0; posX <= RADIUS; posX++) {
+		for ( posY = 0; posY <= RADIUS; posY++)
+			for ( posX = 0; posX <= RADIUS; posX++) {
 				if (y <= 0) {
 					sharedData[posX + threadIdx.x + RADIUS + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x-posX) + maxX * (y+posY)];
 				}
@@ -47,8 +48,8 @@ __device__ void memSetSharedMem(int x, int y, uchar3 *sharedData, uchar3 *global
 			}
 	}
 	else if (threadIdx.y == blockDim.y - 1 && threadIdx.x == 0) {
-		for (int posY = 0; posY <= RADIUS; posY++)
-			for (int posX = 0; posX <= RADIUS; posX++) {
+		for ( posY = 0; posY <= RADIUS; posY++)
+			for ( posX = 0; posX <= RADIUS; posX++) {
 				if (x <= 0) {
 					sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[(x+posX) + maxX * (y+posY)];
 				}
@@ -58,8 +59,8 @@ __device__ void memSetSharedMem(int x, int y, uchar3 *sharedData, uchar3 *global
 			}
 	}
 	else if (threadIdx.y == blockDim.y - 1 && threadIdx.x == blockDim.x - 1) {
-		for (int posY = 0; posY <= RADIUS; posY++)
-			for (int posX = 0; posX <= RADIUS; posX++) {
+		for ( posY = 0; posY <= RADIUS; posY++)
+			for ( posX = 0; posX <= RADIUS; posX++) {
 				if (x == maxX - 1 && y == maxY - 1) {
 					sharedData[posX + RADIUS + threadIdx.x + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[(x-posX) + maxX * (y-posY)];
 				}
@@ -69,8 +70,8 @@ __device__ void memSetSharedMem(int x, int y, uchar3 *sharedData, uchar3 *global
 			}
 	}
 	else if (threadIdx.x == 0) {
-		int posY = threadIdx.y + RADIUS;
-		for (int posX = 0; posX <= RADIUS; posX++) {
+		 posY = threadIdx.y + RADIUS;
+		for ( posX = 0; posX <= RADIUS; posX++) {
 			if (x <= 0) {
 				sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x+posX + maxX * y];
 			}
@@ -81,8 +82,8 @@ __device__ void memSetSharedMem(int x, int y, uchar3 *sharedData, uchar3 *global
 		}
 	}
 	else if (threadIdx.y == 0) {
-		int posX = threadIdx.x + RADIUS;
-		for (int posY = 0; posY <= RADIUS; posY++) {
+		 posX = threadIdx.x + RADIUS;
+		for ( posY = 0; posY <= RADIUS; posY++) {
 			if (y <= 0) {
 				sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y+posY)];
 			}
@@ -93,8 +94,8 @@ __device__ void memSetSharedMem(int x, int y, uchar3 *sharedData, uchar3 *global
 		}
 	}
 	else if (threadIdx.x == blockDim.x - 1) {
-		int posY = threadIdx.y + RADIUS;
-		for (int posX = 0; posX <= RADIUS; posX++) {
+		 posY = threadIdx.y + RADIUS;
+		for ( posX = 0; posX <= RADIUS; posX++) {
 			if (x == maxX) {
 				sharedData[posX + RADIUS + threadIdx.x + posY * (blockDim.x + 2 * RADIUS)] = globalData[x-posX + maxX * y];
 			}
@@ -104,12 +105,14 @@ __device__ void memSetSharedMem(int x, int y, uchar3 *sharedData, uchar3 *global
 		}
 	}
 	else if (threadIdx.y == blockDim.y - 1) {
-		int posX = threadIdx.x + RADIUS;
-		for (int posY = 0; posY <= RADIUS; posY++) {
+		 posX = threadIdx.x + RADIUS;
+		for ( posY = 0; posY <= RADIUS; posY++) {
 			if (y == maxY - 1) {
 				sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y-posY)];
 			}
-			sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y + posY)];
+			else {
+				sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y + posY)];
+			}
 		}
 	}
 	else {
@@ -117,33 +120,32 @@ __device__ void memSetSharedMem(int x, int y, uchar3 *sharedData, uchar3 *global
 	}
 }
 
-__global__ void findAverage(uchar3 *matrix, uchar3 *avgMatrix, int maxX, int maxY, int count) {
+__global__ void findAverage(const uchar3 *matrix, uchar3 *avgMatrix,int maxX,int maxY) {
 	int x = threadIdx.x + blockIdx.x*blockDim.x;
 	int y = threadIdx.y + blockIdx.y*blockDim.y;
 
 	extern __shared__ uchar3 sharedData[];
 
-
-
 	if (x < maxX  && y < maxY) {
-		memSetSharedMem(x, y, sharedData, matrix, maxX, maxY);
+		memSetSharedMem(x, y, sharedData, matrix,maxX,maxY);
 		__syncthreads();
-		int3 sum { 0,0,0 };;
-		int sharedMaxX = blockDim.x + 2 * RADIUS;
+		int3 sum { 0,0,0 };
 		//if (threadIdx.x == 0 && blockIdx.x == 3 && threadIdx.y == 2 && blockIdx.y == 3)
 		{
 			for (int r = 0; r < 2 * RADIUS + 1; r++) {
 				for (int c = 0; c < 2 * RADIUS + 1; c++) {
+					int indexOffset = (threadIdx.x + c) + (blockDim.x + 2 * RADIUS)*(threadIdx.y + r);
 					//printf("%d ", sharedData[(threadIdx.x + c) + (sharedMaxX)*(threadIdx.y + r)]);
-					sum.x += sharedData[(threadIdx.x + c) + (sharedMaxX)*(threadIdx.y + r)].x;
-					sum.y += sharedData[(threadIdx.x + c) + (sharedMaxX)*(threadIdx.y + r)].y;
-					sum.z += sharedData[(threadIdx.x + c) + (sharedMaxX)*(threadIdx.y + r)].z;
+					sum.x += sharedData[indexOffset].x;
+					sum.y += sharedData[indexOffset].y;
+					sum.z += sharedData[indexOffset].z;
 				}
 				//printf("\n");
 			}
-			avgMatrix[x + maxX * y].x = (uchar)(sum.x / count);
-			avgMatrix[x + maxX * y].y =(uchar) (sum.y / count);
-			avgMatrix[x + maxX * y].z =(uchar) (sum.z / count);
+			int index = x + maxX * y;
+			avgMatrix[index].x = (uchar)(sum.x / ((RADIUS * 2 + 1)*(RADIUS * 2 + 1)));
+			avgMatrix[index].y =(uchar) (sum.y / ((RADIUS * 2 + 1)*(RADIUS * 2 + 1)));
+			avgMatrix[index].z =(uchar) (sum.z / ((RADIUS * 2 + 1)*(RADIUS * 2 + 1)));
 		}
 	}
 
@@ -223,11 +225,10 @@ int main()
 	}
 	const dim3 blockSize(32, 32, 1);
 	const dim3 gridSize((inputImage.cols + blockSize.x - 1) / blockSize.x, (inputImage.rows + blockSize.y - 1) / blockSize.y, 1);
-	int count = (RADIUS * 2 + 1)*(RADIUS * 2 + 1);
 
-	int sharedMemSpace = (blockSize.x + 2 * RADIUS)*(blockSize.y + 2 * RADIUS);
+	int sharedMemSpace = (blockSize.x + 2 * RADIUS)*(blockSize.y + 2 * RADIUS) * sizeof(uchar3);
 	//printf("%d %d %d %d %d %d %d %d", blockSize.x, blockSize.y, gridSize.x, gridSize.y, inputImage.rows, inputImage.cols, outputImage.rows, outputImage.cols);
-	findAverage <<<gridSize, blockSize, sharedMemSpace * sizeof(uchar3) >>> (dInputImageData, dOutputImageData, inputImage.cols, inputImage.rows, count);
+	findAverage <<<gridSize, blockSize, sharedMemSpace >>> (dInputImageData, dOutputImageData, inputImage.cols, inputImage.rows);
 	//findAverage <<<gridSize, blockSize >>> (dInputImageData, dOutputImageData, inputImage.cols, inputImage.rows, count);
 
 	cudaDeviceSynchronize();
