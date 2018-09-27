@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Image-Blurring", "Image-Blu
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Image-Blurring(RGB)", "Image-Blurring(RGB)\Image-Blurring(RGB).vcxproj", "{C36BDC6B-E354-4D8B-9389-E7DD194D3CD2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Gaussian Blur", "Gaussian Blur\Gaussian Blur.vcxproj", "{FE2E7037-2503-4EAD-970D-94216736AE14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{C36BDC6B-E354-4D8B-9389-E7DD194D3CD2}.Debug|x64.Build.0 = Debug|x64
 		{C36BDC6B-E354-4D8B-9389-E7DD194D3CD2}.Release|x64.ActiveCfg = Release|x64
 		{C36BDC6B-E354-4D8B-9389-E7DD194D3CD2}.Release|x64.Build.0 = Release|x64
+		{FE2E7037-2503-4EAD-970D-94216736AE14}.Debug|x64.ActiveCfg = Debug|x64
+		{FE2E7037-2503-4EAD-970D-94216736AE14}.Debug|x64.Build.0 = Debug|x64
+		{FE2E7037-2503-4EAD-970D-94216736AE14}.Release|x64.ActiveCfg = Release|x64
+		{FE2E7037-2503-4EAD-970D-94216736AE14}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
