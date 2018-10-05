@@ -25,98 +25,132 @@ void showImage(Mat img, char *title) {
 __device__ void memSetSharedMem(int x, int y, uchar3 *sharedData,const uchar3 *globalData,int maxX,int maxY) {
 	int posX;
 	int posY;
+	int sharedBlockIndex;
+	int globalMemIndex;
 	if (threadIdx.x == 0 && threadIdx.y == 0) {
 		for ( posY = 0; posY <= RADIUS; posY++)
 			for ( posX = 0; posX <= RADIUS; posX++) {
+				sharedBlockIndex = posX + posY * (blockDim.x + 2 * RADIUS);
 				if (x <= 0 && y <= 0) {
-					sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x+posX + maxX * (y+posY)];
+					globalMemIndex = x + posX + maxX * (y + posY);
+					//sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x+posX + maxX * (y+posY)];
 				}
 				else {
-					sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x - RADIUS + posX) + maxX * (y - RADIUS + posY)];
+					globalMemIndex = (x - RADIUS + posX) + maxX * (y - RADIUS + posY);
+					//sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x - RADIUS + posX) + maxX * (y - RADIUS + posY)];
 				}
+				sharedData[sharedBlockIndex] = globalData[globalMemIndex];
 			}
 	}
 	else if (threadIdx.y == 0 && threadIdx.x == blockDim.x - 1) {
 		for ( posY = 0; posY <= RADIUS; posY++)
 			for ( posX = 0; posX <= RADIUS; posX++) {
+				sharedBlockIndex = posX + threadIdx.x + RADIUS + posY * (blockDim.x + 2 * RADIUS);
 				if (y <= 0) {
-					sharedData[posX + threadIdx.x + RADIUS + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x-posX) + maxX * (y+posY)];
+					globalMemIndex = (x - posX) + maxX * (y + posY);
+					//sharedData[posX + threadIdx.x + RADIUS + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x-posX) + maxX * (y+posY)];
 				}
 				else {
-					sharedData[posX + threadIdx.x + RADIUS + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x + posX) + maxX * (y - RADIUS + posY)];
+					globalMemIndex = (x + posX) + maxX * (y - RADIUS + posY);
+					//sharedData[posX + threadIdx.x + RADIUS + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x + posX) + maxX * (y - RADIUS + posY)];
 				}
+				sharedData[sharedBlockIndex] = globalData[globalMemIndex];
 			}
 	}
 	else if (threadIdx.y == blockDim.y - 1 && threadIdx.x == 0) {
 		for ( posY = 0; posY <= RADIUS; posY++)
 			for ( posX = 0; posX <= RADIUS; posX++) {
+				sharedBlockIndex = posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS);
 				if (x <= 0) {
-					sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[(x+posX) + maxX * (y+posY)];
+					globalMemIndex = (x + posX) + maxX * (y + posY);
+					//sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[(x+posX) + maxX * (y+posY)];
 				}
 				else {
-					sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[(x - RADIUS + posX) + maxX * (y + posY)];
+					globalMemIndex = (x - RADIUS + posX) + maxX * (y + posY);
+					//sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[(x - RADIUS + posX) + maxX * (y + posY)];
 				}
+				sharedData[sharedBlockIndex] = globalData[globalMemIndex];
 			}
 	}
 	else if (threadIdx.y == blockDim.y - 1 && threadIdx.x == blockDim.x - 1) {
 		for ( posY = 0; posY <= RADIUS; posY++)
 			for ( posX = 0; posX <= RADIUS; posX++) {
+				sharedBlockIndex = posX + RADIUS + threadIdx.x + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS);
 				if (x == maxX - 1 && y == maxY - 1) {
-					sharedData[posX + RADIUS + threadIdx.x + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[(x-posX) + maxX * (y-posY)];
+					globalMemIndex = (x - posX) + maxX * (y - posY);
+					//sharedData[posX + RADIUS + threadIdx.x + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[(x-posX) + maxX * (y-posY)];
 				}
 				else {
-					sharedData[posX + RADIUS + threadIdx.x + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[(x + posX) + maxX * (y + posY)];
+					globalMemIndex = (x + posX) + maxX * (y + posY);
+					//sharedData[posX + RADIUS + threadIdx.x + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[(x + posX) + maxX * (y + posY)];
 				}
+				sharedData[sharedBlockIndex] = globalData[globalMemIndex];
 			}
 	}
 	else if (threadIdx.x == 0) {
 		 posY = threadIdx.y + RADIUS;
 		for ( posX = 0; posX <= RADIUS; posX++) {
+			sharedBlockIndex = posX + posY * (blockDim.x + 2 * RADIUS);
 			if (x <= 0) {
-				sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x+posX + maxX * y];
+				globalMemIndex = x + posX + maxX * y;
+				//sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x+posX + maxX * y];
 			}
 			else {
-				sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x - RADIUS + posX) + maxX * y];
+				globalMemIndex = (x - RADIUS + posX) + maxX * y;
+				//sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x - RADIUS + posX) + maxX * y];
 			}
-
+			sharedData[sharedBlockIndex] = globalData[globalMemIndex];
 		}
 	}
 	else if (threadIdx.y == 0) {
 		 posX = threadIdx.x + RADIUS;
 		for ( posY = 0; posY <= RADIUS; posY++) {
+			sharedBlockIndex = posX + posY * (blockDim.x + 2 * RADIUS);
 			if (y <= 0) {
-				sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y+posY)];
+				globalMemIndex = x + maxX * (y + posY);
+				//sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y+posY)];
 			}
 			else {
-				sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y - RADIUS + posY)];
+				globalMemIndex = x + maxX * (y - RADIUS + posY);
+				//sharedData[posX + posY * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y - RADIUS + posY)];
 			}
-
+			sharedData[sharedBlockIndex] = globalData[globalMemIndex];
 		}
 	}
 	else if (threadIdx.x == blockDim.x - 1) {
 		 posY = threadIdx.y + RADIUS;
 		for ( posX = 0; posX <= RADIUS; posX++) {
+			sharedBlockIndex = posX + RADIUS + threadIdx.x + posY * (blockDim.x + 2 * RADIUS);
 			if (x == maxX) {
-				sharedData[posX + RADIUS + threadIdx.x + posY * (blockDim.x + 2 * RADIUS)] = globalData[x-posX + maxX * y];
+				globalMemIndex = x - posX + maxX * y;
+				//sharedData[posX + RADIUS + threadIdx.x + posY * (blockDim.x + 2 * RADIUS)] = globalData[x-posX + maxX * y];
 			}
 			else {
-				sharedData[posX + RADIUS + threadIdx.x + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x + posX) + maxX * y];
+				globalMemIndex = (x + posX) + maxX * y;
+				//sharedData[posX + RADIUS + threadIdx.x + posY * (blockDim.x + 2 * RADIUS)] = globalData[(x + posX) + maxX * y];
 			}
+			sharedData[sharedBlockIndex] = globalData[globalMemIndex];
 		}
 	}
 	else if (threadIdx.y == blockDim.y - 1) {
 		 posX = threadIdx.x + RADIUS;
 		for ( posY = 0; posY <= RADIUS; posY++) {
+			sharedBlockIndex = posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS);
 			if (y == maxY - 1) {
-				sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y-posY)];
+				globalMemIndex = x + maxX * (y - posY);
+				//sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y-posY)];
 			}
 			else {
-				sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y + posY)];
+				globalMemIndex = x + maxX * (y + posY);
+				//sharedData[posX + (posY + RADIUS + threadIdx.y) * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * (y + posY)];
 			}
+			sharedData[sharedBlockIndex] = globalData[globalMemIndex];
 		}
 	}
 	else {
-		sharedData[threadIdx.x + RADIUS + (threadIdx.y + RADIUS) * (blockDim.x + 2 * RADIUS)] = globalData[x + maxX * y];
+		sharedBlockIndex = threadIdx.x + RADIUS + (threadIdx.y + RADIUS) * (blockDim.x + 2 * RADIUS);
+		globalMemIndex = x + maxX * y;
+		sharedData[sharedBlockIndex] = globalData[globalMemIndex];
 	}
 }
 
